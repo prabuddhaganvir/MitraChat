@@ -5,8 +5,7 @@ import bcrypt from  "bcryptjs"
 
 
 export const signup  = async (req ,res) => {
-
-    
+  
     const {fullName, email, password , nickName} = req.body
 
     try {
@@ -60,10 +59,45 @@ export const signup  = async (req ,res) => {
     }
 }
 
-export const logout  = (req ,res) =>{
-    res.send("this is logout")
+export const login  =  async(req ,res) => {
+    const {email, password} = req.body
+   try {
+    //checking email in db
+    const user = await User.findOne({email})
+    if(!user){
+        res.status(400).json({message:"Invalid Credentials"})
+    }
+    // checking and comapairing
+    const isPasswordCorrect = await bcrypt.compare(password,user.password)
+    if(!isPasswordCorrect){
+        res.status(400).json({message:"Invalid Credentials"})
+    }
+    //gentoken
+    generateToken(user._id, res)
+        res.status(200).json({
+            _id:user._id,
+            fullName:user.fullName,
+            email:user.email,
+            nickName:user.nickName,
+            profilePic:user.profilePic,
+            message:"login in successfully"
+        })
+   } catch (error) {
+    console.log("Error in login Controller");
+    res.status(500).json({message:"Internal server error"})
+   }
 }
 
-export const login  = (req ,res) =>{
-    res.send("this is login")
+export const logout  = (req ,res) =>{
+    try {
+        
+    res.cookie("jwt","",{maxAge:0})
+    res.status(200).json({message:"logout Succsesfully"})
+
+    } catch (error) {
+        
+    console.log("Error in login Controller");
+    res.status(500).json({message:"Internal server error"})
+    }
+
 }
